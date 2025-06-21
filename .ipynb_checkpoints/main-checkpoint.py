@@ -5,9 +5,29 @@ SGPS – Bullet‑proof Llama pretraining_tp patch
 """
 
 # ─── 기본 import ───
-import argparse, random, json, time, re
+import argparse, random, json, time, re, sys, importlib.util
 from pathlib import Path
 from typing import List
+
+REQUIRED_PKGS = ["numpy", "torch", "evaluate", "detoxify",
+                 "datasets", "transformers", "bitsandbytes"]
+
+def check_requirements():
+    missing = []
+    for name in REQUIRED_PKGS:
+        if importlib.util.find_spec(name) is None:
+            missing.append(name)
+    if missing:
+        sys.stderr.write(
+            "Missing required packages: {}\n".format(", ".join(missing)))
+        sys.stderr.write("Please install dependencies listed in requirements.txt\n")
+        return False
+    return True
+
+if not check_requirements():
+    sys.exit(1)
+
+
 import numpy as np
 from tqdm.auto import tqdm
 from loguru import logger
@@ -23,6 +43,8 @@ def _set_tp(obj):
     if isinstance(obj, PretrainedConfig):
         if getattr(obj, "pretraining_tp", None) is None:
             obj.pretraining_tp = 1
+        if getattr(obj, "parallelization_style", None) is None:
+            obj.parallelization_style = []
     elif isinstance(obj, (list, tuple)):
         for x in obj:
             _set_tp(x)
