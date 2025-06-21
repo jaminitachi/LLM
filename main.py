@@ -42,6 +42,8 @@ def _set_tp(obj):
     if isinstance(obj, PretrainedConfig):
         if getattr(obj, "pretraining_tp", None) is None:
             obj.pretraining_tp = 1
+        if getattr(obj, "parallelization_style", None) is None:
+            obj.parallelization_style = []
     elif isinstance(obj, (list, tuple)):
         for x in obj:
             _set_tp(x)
